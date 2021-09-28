@@ -99,7 +99,7 @@ software() {
   dnf upgrade -y
 
   ### INSTALL PROGRAMS ###
-  dnf install -y dialog \
+  dnf install -y dialog jq \
     git gcc nodejs \
     papirus-icon-theme yaru-theme \
     gnome-tweaks gnome-extensions-app gnome-shell-extension-appindicator \
