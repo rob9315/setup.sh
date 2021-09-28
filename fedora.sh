@@ -210,8 +210,8 @@ non_privileged() {
 
 }
 
-read -sn 1 -p "Do you want to install software? (requires sudo access) " && echo
-[ $(echo $REPLY | tr '[A-Z]' '[a-z]') = "y" ] && sudo_func software
+read -sn 1 -p "Do you want to install software? (requires sudo access) " REPLY && echo
+[ "$(echo $REPLY | tr '[A-Z]' '[a-z]')" = "y" ] && sudo_func software
 
-read -sn 1 -p "Do you want to apply configuration? " && echo
-[ $(echo $REPLY | tr '[A-Z]' '[a-z]') = "y" ] && non_privileged
+read -sn 1 -p "Do you want to apply configuration? " REPLY && echo
+[ "$(echo $REPLY | tr '[A-Z]' '[a-z]')" = "y" ] && non_privileged
