@@ -203,15 +203,15 @@ non_privileged() {
   ### PROGRAM SETTINGS ###
 
   # code
-  jq_mod_file $(pwd)'/.config/Code/User/settings.json' \
+  jq_mod_file `echo ~/.config/Code/User/settings.json` \
     '. + {"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none"}'
 
   ### REMOVE POSSIBLE WINE DESKTOP FILES ###
 
 }
 
-read -sn 1 -p "Do you want to install software? (requires sudo access) " REPLY && echo
-[ "$(echo $REPLY | tr '[A-Z]' '[a-z]')" = "y" ] && sudo_func software
+read -sn 1 -p "Do you want to install software? (requires sudo access) " && echo
+[ "$(echo "$REPLY" | tr '[A-Z]' '[a-z]')" = "y" ] && sudo_func software
 
-read -sn 1 -p "Do you want to apply configuration? " REPLY && echo
-[ "$(echo $REPLY | tr '[A-Z]' '[a-z]')" = "y" ] && non_privileged
+read -sn 1 -p "Do you want to apply configuration? " && echo
+[ "$(echo "$REPLY" | tr '[A-Z]' '[a-z]')" = "y" ] && non_privileged
