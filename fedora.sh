@@ -110,8 +110,9 @@ software() {
     && echo "discord already installed" \
     || {
       echo "installing discord"
-      flatpak install com.discordapp.Discord -y
+      flatpak install flathub com.discordapp.Discord -y
     }
+  add_to_rcs 'alias discord=flatpak run com.discordapp.Discord'
 
   ### REMOVE BLOAT ###
   dnf list installed | grep -q gnome-shell-extension-background-logo \
@@ -132,6 +133,7 @@ non_privileged() {
       curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y
       source "$HOME/.cargo/env"
     }
+  
   which deno &>/dev/null \
     && echo "deno already installed" \
     || {
