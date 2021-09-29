@@ -42,6 +42,7 @@ jq_mod_file() {
   shift
   opts=$@
   tmp=$(mktemp)
+  mkdir -p $(dirname $FILEPATH)
   [ -f $FILEPATH ] || echo "{}" >$FILEPATH
   jq "$opts" $FILEPATH >$tmp && cat $tmp >$FILEPATH && rm $tmp
 }
