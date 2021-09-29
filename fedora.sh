@@ -109,6 +109,10 @@ software() {
   # potentially fix flatpak repo problem
   mkdir -p /var/lib/flatpak/repo/objects/
   flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    || {
+      rm -rf /var/lib/flatpak/repo/
+      flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    }
 
   flatpak info com.discordapp.Discord &>/dev/null \
     && echo "discord already installed" \
