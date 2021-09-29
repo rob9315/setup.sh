@@ -106,7 +106,7 @@ software() {
     git gcc nodejs \
     papirus-icon-theme yaru-theme \
     gnome-tweaks gnome-extensions-app gnome-shell-extension-appindicator \
-    xkill dmenu htop \
+    xkill dmenu htop vim neovim \
     code
 
   # potentially fix flatpak repo problem
