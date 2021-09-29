@@ -14,15 +14,24 @@
 ### DEFAULTS ###
 
 LAYOUT=${LAYOUT-"[('xkb', 'us+altgr-intl')]"}
+XKB_OPTIONS=${XKB_OPTIONS-"['lv3:ralt_switch', 'compose:caps']"}
+FAVORITE_APPS=${FAVORITE_APPS-"['firefox.desktop', 'org.gnome.Nautilus.desktop', 'com.discordapp.Discord.desktop', 'code.desktop']"}
 RC_FILES="$HOME/.bashrc"
+
+# if regex matches desktop entries, they are renamed to .desktop.old
+DESKTOP_ENTRY_REGEX=${DESKTOP_ENTRY_REGEX-"\/wine-"}
+
+## jq-parseable!!
+ENABLED_EXTENSIONS=${ENABLED_EXTENSIONS-'["appindicatorsupport@rgcjonas.gmail.com", "user-theme@gnome-shell-extensions.gcampax.github.com"]'}
+DISABLED_EXTENSIONS=${DISABLED_EXTENSIONS-'["background-logo@fedorahosted.org"]'}
 
 ### HELPER FUNCTIONS ###
 
 cmd() {
-  GSETTINGS_PATH="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom$1/"
-  NAME="$2"
-  COMMAND="$3"
-  BINDING="$4"
+  NAME="$1"
+  COMMAND="$2"
+  BINDING="$3"
+  GSETTINGS_PATH="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom-$NAME/"
 
   cmd_prop() {
     GSETTINGS_PATH="$1"
@@ -90,7 +99,7 @@ software() {
 
   ### ADD REPOS ###
 
-  # vscodes
+  # vscode
   [ -f /etc/yum.repos.d/vscode.repo ] \
     && echo "vscode repo already installed" \
     || {
@@ -99,9 +108,11 @@ software() {
     }
 
   ### UPDATE PROGRAMS ###
+  
   dnf upgrade -y
 
   ### INSTALL PROGRAMS ###
+  
   dnf install -y --skip-broken \
     dialog jq \
     git gcc nodejs \
@@ -133,17 +144,27 @@ software() {
   add_to_rcs 'alias discord="flatpak run com.discordapp.Discord"'
 
   ### REMOVE BLOAT ###
+  
   dnf list installed | grep -q gnome-shell-extension-background-logo \
     && {
       echo "uninstalling background-logo"
       dnf remove -y gnome-shell-extension-background-logo
     } \
     || echo "background-logo already uninstalled"
+
+  ### REMOVE .DESKTOP FILES ###
+  
+  find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
+    | grep '\.desktop$' | grep "$DESKTOP_ENTRY_REGEX" | xargs -I '{a}' mv '{a}' '{a}.old'
+  find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
+    | grep '\.desktop\.old$' | grep -v "$DESKTOP_ENTRY_REGEX" | sed 's/\.old$//' | xargs -I '{a}.old' mv '{a}'
+  
 }
 
 non_privileged() {
 
   ### DEVELOPMENT SOFTWARE (USER INSTALLATION) ###
+  
   which rustup &>/dev/null \
     && echo "rustup already installed" \
     || {
@@ -172,12 +193,18 @@ non_privileged() {
   gsettings set org.gnome.shell.extensions.user-theme name "Yaru"
 
   # extension settings
-  gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com
-  gnome-extensions disable background-logo@fedorahosted.org
+  gsettings set org.gnome.shell enabled-extensions "$(gsettings get org.gnome.shell enabled-extensions | sed 's/'"'"'/"/g' | sed 's/^@as \[\]$/\[\]/g' | jq ". + $ENABLED_EXTENSIONS" | jq unique | jq -rc)"
+  gsettings set org.gnome.shell disabled-extensions "$(gsettings get org.gnome.shell disabled-extensions | sed 's/'"'"'/"/g' | sed 's/^@as \[\]$/\[\]/g' | jq ". + $DISABLED_EXTENSIONS" | jq unique | jq -rc)"
+  gsettings set org.gnome.tweaks show-extensions-notice false
 
   # keyboard layout
   # HINT: find correct one using `ibus list-engine`
   gsettings set org.gnome.desktop.input-sources sources "$LAYOUT"
+  gsettings set org.gnome.desktop.input-sources xkb-options "$XKB_OPTIONS"
+
+  ## PINNED APPS ##
+
+  gsettings set org.gnome.shell favorite-apps "$FAVORITE_APPS"
 
   ## KEYBINDINGS ##
 
@@ -189,8 +216,8 @@ non_privileged() {
 
   ## CUSTOM KEYBINDINGS ##
 
-  cmd Terminal 'custom-terminal' 'gnome-terminal' '<Shift><Alt>Return'
-  cmd Dmenu 'dmenu' 'sh -c "test $XDG_SESSION_TYPE = x11 && dmenu_run"' '<Alt>semicolon'
+  cmd 'custom-terminal' 'gnome-terminal' '<Shift><Alt>Return'
+  cmd 'dmenu' 'sh -c "test $XDG_SESSION_TYPE = x11 && dmenu_run"' '<Alt>semicolon'
 
   ## MISC ##
 
