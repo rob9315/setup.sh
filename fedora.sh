@@ -48,8 +48,7 @@ jq_mod_file() {
 }
 
 sudo_func() {
-  func=$1
-  sudo su -c "$(declare -f $func);$func"
+  sudo su -c "$(declare -p); $(declare -f $1); $1" 2>/dev/null
 }
 
 escape_regex() {
@@ -67,7 +66,7 @@ add_to_rc() {
 add_to_rcs() {
   STRING=$1
   for rc in "$RC_FILES"; do
-    [ -f "$rc" ] || touch "$rc"
+    [ -f "$rc" ] || { echo "$rc doesn't exist, creating the file"; touch "$rc"; }
     add_to_rc "$STRING" "$rc"
   done
 }
@@ -134,7 +133,7 @@ non_privileged() {
       curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y
       source "$HOME/.cargo/env"
     }
-  
+
   which deno &>/dev/null \
     && echo "deno already installed" \
     || {
@@ -206,7 +205,7 @@ non_privileged() {
   ### PROGRAM SETTINGS ###
 
   # code
-  jq_mod_file `echo ~/.config/Code/User/settings.json` \
+  jq_mod_file $(echo ~/.config/Code/User/settings.json) \
     '. + {"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none"}'
 
   ### REMOVE POSSIBLE WINE DESKTOP FILES ###
