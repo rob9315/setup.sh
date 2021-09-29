@@ -106,10 +106,13 @@ software() {
     xkill dmenu htop \
     code
 
+  # potentially fix flatpak repo problem
+  mkdir -p /var/lib/flatpak/repo/objects/
+
   flatpak info com.discordapp.Discord &>/dev/null \
     && echo "discord already installed" \
     || {
-      echo "installing discord"
+      echo "installing discord" 
       flatpak install flathub com.discordapp.Discord -y
     }
   add_to_rcs 'alias discord=flatpak run com.discordapp.Discord'
