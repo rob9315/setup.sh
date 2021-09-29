@@ -15,7 +15,7 @@
 
 LAYOUT=${LAYOUT-"[('xkb', 'us+altgr-intl')]"}
 XKB_OPTIONS=${XKB_OPTIONS-"['lv3:ralt_switch', 'compose:caps']"}
-FAVORITE_APPS=${FAVORITE_APPS-"['firefox.desktop', 'org.gnome.Nautilus.desktop', 'com.discordapp.Discord.desktop', 'code.desktop']"}
+FAVORITE_APPS=${FAVORITE_APPS-"['firefox.desktop', 'org.gnome.Nautilus.desktop', 'code.desktop', 'com.discordapp.Discord.desktop']"}
 VSCODE_CONFIG=${VSCODE_CONFIG-'{"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none","git.autofetch":true}'}
 RC_FILES="$HOME/.bashrc"
 
