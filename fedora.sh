@@ -102,12 +102,18 @@ software() {
   dnf upgrade -y
 
   ### INSTALL PROGRAMS ###
-  dnf install -y --skip-broken dialog jq \
+  dnf install -y --skip-broken \
+    dialog jq \
     git gcc nodejs \
     papirus-icon-theme yaru-theme \
     gnome-tweaks gnome-extensions-app gnome-shell-extension-appindicator \
     xkill dmenu htop vim neovim \
-    code
+    code \
+    fedora-repos-rawhide
+
+  # get latest version of xyz from rawhide
+  sudo dnf --disablerepo=* --enablerepo=rawhide upgrade \
+    yaru-theme
 
   # potentially fix flatpak repo problem
   mkdir -p /var/lib/flatpak/repo/objects/
