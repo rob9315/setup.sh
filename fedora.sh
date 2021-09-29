@@ -113,6 +113,7 @@ software() {
   mkdir -p /var/lib/flatpak/repo/objects/
   flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo \
     || {
+      # if that didn't work, completely delete the flatpak repo and reinstall from scratch
       rm -rf /var/lib/flatpak/repo/
       flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
     }
