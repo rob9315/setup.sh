@@ -112,7 +112,7 @@ software() {
     fedora-repos-rawhide
 
   # get latest version of xyz from rawhide
-  dnf --disablerepo=* --enablerepo=rawhide upgrade \
+  dnf --disablerepo=* --enablerepo=rawhide -y upgrade \
     yaru-theme
 
   # potentially fix flatpak repo problem
