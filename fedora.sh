@@ -16,7 +16,7 @@
 LAYOUT=${LAYOUT-"[('xkb', 'us+altgr-intl')]"}
 XKB_OPTIONS=${XKB_OPTIONS-"['lv3:ralt_switch', 'compose:caps']"}
 FAVORITE_APPS=${FAVORITE_APPS-"['firefox.desktop', 'org.gnome.Nautilus.desktop', 'com.discordapp.Discord.desktop', 'code.desktop']"}
-VSCODE_CONFIG=${VSCODE_CONFIG-'{"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none"}'}
+VSCODE_CONFIG=${VSCODE_CONFIG-'{"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none","git.autofetch":true}'}
 RC_FILES="$HOME/.bashrc"
 
 # if regex matches desktop entries, they are renamed to .desktop.old
@@ -48,13 +48,13 @@ cmd() {
 }
 
 jq_mod_file() {
-  FILEPATH=$1
+  FILEPATH="$1"
   shift
-  opts=$@
+  opts="$@"
   tmp=$(mktemp)
   mkdir -p $(dirname $FILEPATH)
-  [ -f $FILEPATH ] || echo "{}" >$FILEPATH
-  jq "$opts" $FILEPATH >$tmp && cat $tmp >$FILEPATH && rm $tmp
+  [ -f "$FILEPATH" ] || echo "{}" >"$FILEPATH"
+  jq "$opts" "$FILEPATH" >"$tmp" && cat "$tmp" >"$FILEPATH" && rm "$tmp"
 }
 
 sudo_func() {
@@ -62,15 +62,15 @@ sudo_func() {
 }
 
 escape_regex() {
-  printf '%s\n' "${!1}" | sed -e 's/[]\/$*.^[]/\\&/g'
+  printf '%s\n' "$1" | sed -e 's/[]\/$*.^[]/\\&/g'
 }
 
 add_to_rc() {
-  STRING=$1
-  FILE=$2
-  [ -f $FILE ] || touch $FILE
-  grep -q "$(escape_regex STRING)" $FILE \
-    || echo "$STRING" >>$FILE
+  STRING="$(escape_regex "$1")"
+  FILE="$2"
+  [ -f "$FILE" ] || touch "$FILE"
+  grep -q "$STRING" "$FILE" \
+    || echo "$STRING" >>"$FILE"
 }
 
 add_to_rcs() {
@@ -84,7 +84,7 @@ add_to_rcs() {
   done
 }
 
-filter_paths() {
+filtered_dot_old() {
   FILE_EXTENSION="$1"
   BLACKLIST_REGEX="$2"
   shift
@@ -96,6 +96,13 @@ filter_paths() {
   find $FILE_PATHS -maxdepth 1 -mindepth 1 \
     | grep "$FILE_EXTENSION.old\$" | grep -v "$BLACKLIST_REGEX" \
     | sed 's/\.old$//' | xargs -I '{a}' mv '{a}.old' '{a}'
+}
+
+dnf_remove_multiple() {
+  PROGRAMS="$@"
+  for PROGRAM in $PROGRAMS; do
+    dnf list installed | grep -q "$PROGRAM" && dnf remove -y "$PROGRAM"
+  done
 }
 
 ### SCRIPTS ###
@@ -160,21 +167,11 @@ software() {
 
   ### REMOVE BLOAT ###
 
-  dnf list installed | grep -q gnome-shell-extension-background-logo \
-    && {
-      echo "uninstalling background-logo"
-      dnf remove -y gnome-shell-extension-background-logo
-    } \
-    || echo "background-logo already uninstalled"
+  dnf_remove_multiple "gnome-shell-extension-background-logo"
 
   ### REMOVE .DESKTOP FILES ###
 
-  filter_paths "\.desktop" "$DESKTOP_ENTRY_REGEX" "/usr/share/applications" "/usr/local/share/applications"
-
-  #find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
-    #| grep '\.desktop$' | grep "$DESKTOP_ENTRY_REGEX" | xargs -I '{a}' mv '{a}' '{a}.old'
-  #find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
-    #| grep '\.desktop\.old$' | grep -v "$DESKTOP_ENTRY_REGEX" | sed 's/\.old$//' | xargs -I '{a}.old' mv '{a}'
+  filtered_dot_old "\.desktop" "$DESKTOP_ENTRY_REGEX" "/usr/share/applications" "/usr/local/share/applications"
 
 }
 
@@ -267,12 +264,11 @@ non_privileged() {
   ### PROGRAM SETTINGS ###
 
   # code
-  jq_mod_file $(echo "$HOME/.config/Code/User/settings.json") \
-    ". + $VSCODE_CONFIG"
+  jq_mod_file $(echo "$HOME/.config/Code/User/settings.json") ". + $VSCODE_CONFIG"
 
   ### REMOVE .DESKTOP FILES ###
 
-  filter_paths "\.desktop" "$DESKTOP_ENTRY_REGEX" "$HOME/.local/share/applications"
+  filtered_dot_old "\.desktop" "$DESKTOP_ENTRY_REGEX" "$HOME/.local/share/applications"
 
 }
 
