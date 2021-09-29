@@ -124,7 +124,7 @@ software() {
       echo "installing discord"
       flatpak install flathub com.discordapp.Discord -y
     }
-  add_to_rcs 'alias discord=flatpak run com.discordapp.Discord'
+  add_to_rcs 'alias discord="flatpak run com.discordapp.Discord"'
 
   ### REMOVE BLOAT ###
   dnf list installed | grep -q gnome-shell-extension-background-logo \
