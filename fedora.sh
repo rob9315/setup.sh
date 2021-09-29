@@ -66,7 +66,10 @@ add_to_rc() {
 add_to_rcs() {
   STRING=$1
   for rc in "$RC_FILES"; do
-    [ -f "$rc" ] || { echo "$rc doesn't exist, creating the file"; touch "$rc"; }
+    [ -f "$rc" ] || {
+      echo "$rc doesn't exist, creating the file"
+      touch "$rc"
+    }
     add_to_rc "$STRING" "$rc"
   done
 }
@@ -108,7 +111,7 @@ software() {
 
   # potentially fix flatpak repo problem
   mkdir -p /var/lib/flatpak/repo/objects/
-  flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo \
     || {
       rm -rf /var/lib/flatpak/repo/
       flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -117,7 +120,7 @@ software() {
   flatpak info com.discordapp.Discord &>/dev/null \
     && echo "discord already installed" \
     || {
-      echo "installing discord" 
+      echo "installing discord"
       flatpak install flathub com.discordapp.Discord -y
     }
   add_to_rcs 'alias discord=flatpak run com.discordapp.Discord'
