@@ -16,6 +16,7 @@
 LAYOUT=${LAYOUT-"[('xkb', 'us+altgr-intl')]"}
 XKB_OPTIONS=${XKB_OPTIONS-"['lv3:ralt_switch', 'compose:caps']"}
 FAVORITE_APPS=${FAVORITE_APPS-"['firefox.desktop', 'org.gnome.Nautilus.desktop', 'com.discordapp.Discord.desktop', 'code.desktop']"}
+VSCODE_CONFIG=${VSCODE_CONFIG-'{"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none"}'}
 RC_FILES="$HOME/.bashrc"
 
 # if regex matches desktop entries, they are renamed to .desktop.old
@@ -57,7 +58,7 @@ jq_mod_file() {
 }
 
 sudo_func() {
-  sudo su -c "$(declare -p); $(declare -f $1); $1" 2>/dev/null
+  sudo su -c "$(declare -p); $(declare -f); $1"
 }
 
 escape_regex() {
@@ -81,6 +82,20 @@ add_to_rcs() {
     }
     add_to_rc "$STRING" "$rc"
   done
+}
+
+filter_paths() {
+  FILE_EXTENSION="$1"
+  BLACKLIST_REGEX="$2"
+  shift
+  shift
+  FILE_PATHS=$@
+  find $FILE_PATHS -maxdepth 1 -mindepth 1 \
+    | grep "$FILE_EXTENSION\$" | grep "$BLACKLIST_REGEX" \
+    | xargs -I "{a}" mv '{a}' '{a}.old'
+  find $FILE_PATHS -maxdepth 1 -mindepth 1 \
+    | grep "$FILE_EXTENSION.old\$" | grep -v "$BLACKLIST_REGEX" \
+    | sed 's/\.old$//' | xargs -I '{a}' mv '{a}.old' '{a}'
 }
 
 ### SCRIPTS ###
@@ -108,11 +123,11 @@ software() {
     }
 
   ### UPDATE PROGRAMS ###
-  
+
   dnf upgrade -y
 
   ### INSTALL PROGRAMS ###
-  
+
   dnf install -y --skip-broken \
     dialog jq \
     git gcc nodejs \
@@ -144,7 +159,7 @@ software() {
   add_to_rcs 'alias discord="flatpak run com.discordapp.Discord"'
 
   ### REMOVE BLOAT ###
-  
+
   dnf list installed | grep -q gnome-shell-extension-background-logo \
     && {
       echo "uninstalling background-logo"
@@ -153,18 +168,20 @@ software() {
     || echo "background-logo already uninstalled"
 
   ### REMOVE .DESKTOP FILES ###
-  
-  find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
-    | grep '\.desktop$' | grep "$DESKTOP_ENTRY_REGEX" | xargs -I '{a}' mv '{a}' '{a}.old'
-  find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
-    | grep '\.desktop\.old$' | grep -v "$DESKTOP_ENTRY_REGEX" | sed 's/\.old$//' | xargs -I '{a}.old' mv '{a}'
-  
+
+  filter_paths "\.desktop" "$DESKTOP_ENTRY_REGEX" "/usr/share/applications" "/usr/local/share/applications"
+
+  #find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
+    #| grep '\.desktop$' | grep "$DESKTOP_ENTRY_REGEX" | xargs -I '{a}' mv '{a}' '{a}.old'
+  #find /usr/share/applications /usr/local/share/applications "$HOME/.local/share/applications" -maxdepth 1 -mindepth 1 \
+    #| grep '\.desktop\.old$' | grep -v "$DESKTOP_ENTRY_REGEX" | sed 's/\.old$//' | xargs -I '{a}.old' mv '{a}'
+
 }
 
 non_privileged() {
 
   ### DEVELOPMENT SOFTWARE (USER INSTALLATION) ###
-  
+
   which rustup &>/dev/null \
     && echo "rustup already installed" \
     || {
@@ -250,15 +267,17 @@ non_privileged() {
   ### PROGRAM SETTINGS ###
 
   # code
-  jq_mod_file $(echo ~/.config/Code/User/settings.json) \
-    '. + {"security.workspace.trust.enabled":false,"telemetry.enableTelemetry":false,"telemetry.enableCrashReporter":false,"workbench.startupEditor":"none"}'
+  jq_mod_file $(echo "$HOME/.config/Code/User/settings.json") \
+    ". + $VSCODE_CONFIG"
 
-  ### REMOVE POSSIBLE WINE DESKTOP FILES ###
+  ### REMOVE .DESKTOP FILES ###
+
+  filter_paths "\.desktop" "$DESKTOP_ENTRY_REGEX" "$HOME/.local/share/applications"
 
 }
 
 read -sn 1 -p "Do you want to install software? (requires sudo access) " && echo
 [ "$(echo "$REPLY" | tr '[A-Z]' '[a-z]')" = "y" ] && sudo_func software
 
-read -sn 1 -p "Do you want to apply configuration? " && echo
+read -sn 1 -p "Do you want to apply user configuration? " && echo
 [ "$(echo "$REPLY" | tr '[A-Z]' '[a-z]')" = "y" ] && non_privileged
