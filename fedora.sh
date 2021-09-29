@@ -29,7 +29,7 @@ cmd() {
     OPTION="$2"
     VALUE="$3"
     gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "$(gsettings get org.gnome.settings-daemon.plugins.media-keys custom-keybindings | sed 's/'"'"'/"/g' | sed 's/^@as \[\]$/\[\]/g' | jq ". + [\"$GSETTINGS_PATH\"]" | jq unique | jq -rc)"
-    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$GSETTINGS_PATH" $OPTION $VALUE
+    gsettings set "org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$GSETTINGS_PATH" "$OPTION" "$VALUE"
   }
 
   cmd_prop "$GSETTINGS_PATH" name "$NAME"
@@ -184,7 +184,7 @@ non_privileged() {
   ## CUSTOM KEYBINDINGS ##
 
   cmd Terminal 'custom-terminal' 'gnome-terminal' '<Shift><Alt>Return'
-  cmd Dmenu 'dmenu' 'dmenu_run' '<Alt>semicolon'
+  cmd Dmenu 'dmenu' 'sh -c "test $XDG_SESSION_TYPE = x11 && dmenu_run"' '<Alt>semicolon'
 
   ## MISC ##
 
