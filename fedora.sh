@@ -66,10 +66,10 @@ escape_regex() {
 }
 
 add_to_rc() {
-  STRING="$(escape_regex "$1")"
+  STRING="$1"
   FILE="$2"
   [ -f "$FILE" ] || touch "$FILE"
-  grep -q "$STRING" "$FILE" \
+  grep -q "$(escape_regex "$STRING")" "$FILE" \
     || echo "$STRING" >>"$FILE"
 }
 
@@ -238,7 +238,7 @@ non_privileged() {
   # window button layout
   gsettings set org.gnome.desktop.wm.preferences button-layout "appmenu:close"
 
-  #disable natural scroll
+  # disable natural scroll
   gsettings set org.gnome.desktop.peripherals.touchpad natural-scroll false
   gsettings set org.gnome.desktop.peripherals.mouse natural-scroll false
 
@@ -250,6 +250,11 @@ non_privileged() {
 
   # switcher
   gsettings set org.gnome.shell.app-switcher current-workspace-only true
+
+  # fonts
+
+  gsettings set org.gnome.desktop.interface font-antialiasing 'grayscale'
+  gsettings set org.gnome.desktop.interface font-hinting 'full'
 
   ## GNOME APPS ##
 
